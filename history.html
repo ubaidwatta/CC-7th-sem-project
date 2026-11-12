@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhishGuard Lite – Scan history</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #131c2e;
+      --border: #22304a;
+      --text: #e5ecf6;
+      --muted: #8a99b3;
+      --accent: #38bdf8;
+      --low: #22c55e;
+      --medium: #eab308;
+      --high: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+      min-height: 100vh;
+    }
+    .page { max-width: 760px; margin: 0 auto; padding: 32px 16px; }
+
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .logo { width: 40px; height: 40px; color: var(--accent); flex-shrink: 0; }
+    h1 { font-size: 22px; }
+    h1 span { color: var(--accent); font-weight: 500; }
+    .subtitle { color: var(--muted); margin-bottom: 20px; }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .count-text { color: var(--muted); font-size: 13px; }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--high);
+      background: transparent;
+      color: var(--high);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn:hover:not(:disabled) { background: rgba(239, 68, 68, 0.12); }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+
+    .list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .entry {
+      --level: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--level);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .entry[data-level="low"] { --level: var(--low); }
+    .entry[data-level="medium"] { --level: var(--medium); }
+    .entry[data-level="high"] { --level: var(--high); }
+
+    .entry-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .domain { font-weight: 600; font-size: 15px; word-break: break-all; }
+    .pill {
+      color: var(--level);
+      border: 1px solid var(--level);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .url {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .time { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    .empty {
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      padding: 36px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .empty[hidden] { display: none; }
+    .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z" />
+        <path d="M8.5 12l2.5 2.5 4.5-5" />
+      </svg>
+      <h1>PhishGuard <span>Lite</span></h1>
+    </header>
+    <p class="subtitle">Your last 10 scanned websites</p>
+
+    <div class="toolbar">
+      <span id="countText" class="count-text"></span>
+      <button id="clearBtn" class="btn" type="button">Clear history</button>
+    </div>
+
+    <ul id="list" class="list"></ul>
+
+    <div id="empty" class="empty" hidden>
+      No scans yet. Open a website and click the PhishGuard icon to scan it.
+    </div>
+
+    <p class="footer">History is stored only in this browser and never leaves your computer.</p>
+  </main>
+
+  <script src="detector.js"></script>
+  <script src="history.js"></script>
+</body>
+</html>
