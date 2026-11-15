@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Paste a URL to see its phishing risk score, the reasons behind it, and how the score was calculated.">
+<title>PhishGuard Lite – URL checker</title>
+<link rel="icon" href="icons/icon48.png">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<main>
+  <header>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+    <h1>PhishGuard <span>Lite</span></h1>
+    <a class="repo" href="https://github.com/ubaidwatta/PhishGuard-Lite" target="_blank" rel="noopener noreferrer">GitHub file</a>
+  </header>
+
+  <nav id="tabs">
+    <button type="button" data-view="scan" aria-current="page">Scan</button>
+    <button type="button" data-view="history">History</button>
+    <button type="button" data-view="trusted">Trusted</button>
+  </nav>
+
+  <section id="v-scan">
+    <div class="card">
+      <div class="row">
+        <input id="urlIn" type="text" placeholder="Paste a URL, e.g. paypa1.com/login" autocomplete="off" spellcheck="false" aria-label="URL to scan">
+        <button id="scanBtn" class="btn" type="button">Scan</button>
+      </div>
+      <p class="hint">Without http:// or https://, https:// is assumed. Try:
+        <button type="button" data-ex="https://www.paypal.com/signin">safe</button>
+        <button type="button" data-ex="https://paypa1.com/login">look-alike</button>
+        <button type="button" data-ex="http://192.168.1.10/secure-login/verify-account/update">suspicious</button>
+      </p>
+      <p id="scanMsg" class="msg err" role="status"></p>
+    </div>
+
+    <div id="result" hidden>
+      <div class="card"><p class="site" id="rDomain"></p><p class="url" id="rUrl"></p></div>
+      <div class="card status" id="rStatus" data-level="low">
+        <div class="gauge">
+          <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="g-bg" cx="60" cy="60" r="52"/><circle class="g-fill" id="gFill" cx="60" cy="60" r="52"/></svg>
+          <b id="rScore">0</b>
+        </div>
+        <div>
+          <p class="lbl" id="rLabel"></p>
+          <p class="sub" id="rMsg"></p>
+          <div class="row mt"><button id="trustBtn" class="btn alt sm" type="button"></button></div>
+          <p id="trustMsg" class="msg" role="status"></p>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Indicators <span id="rCount">0</span></h2>
+        <ul id="rInd"></ul>
+        <div class="sum" id="rSum" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="v-history" hidden>
+    <div class="bar"><h2>Last 10 scans</h2><button id="clearBtn" class="btn danger sm" type="button">Clear history</button></div>
+    <ul id="hList"></ul>
+  </section>
+
+  <section id="v-trusted" hidden>
+    <div class="card">
+      <div class="row">
+        <input id="tIn" type="text" placeholder="example.com" autocomplete="off" spellcheck="false" aria-label="Domain to trust">
+        <button id="tAdd" class="btn" type="button">Add</button>
+      </div>
+      <p class="hint">Trusted domains and their subdomains are skipped over HTTPS.</p>
+      <p id="tMsg" class="msg" role="status"></p>
+    </div>
+    <ul id="tList"></ul>
+  </section>
+
+  <footer>Runs in your browser. Only the URL text is analyzed. History and trusted domains stay on this device.</footer>
+</main>
+<script src="detector.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

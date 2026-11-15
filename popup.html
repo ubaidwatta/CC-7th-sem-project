@@ -49,7 +49,26 @@
     <section class="card">
       <h2>Detected indicators <span id="count" class="count">0</span></h2>
       <ul id="indicators" class="indicators"></ul>
+      <div id="breakdown" class="breakdown" hidden></div>
     </section>
+
+    <details class="card trusted-card" id="trustedCard">
+      <summary>
+        <span class="summary-title">Trusted websites</span>
+        <span id="trustedCount" class="count">0</span>
+      </summary>
+      <div class="trusted-body">
+        <p class="hint">Websites you add are treated as safe over HTTPS, including their subdomains.</p>
+        <div class="add-row">
+          <input id="trustedInput" type="text" placeholder="example.com"
+                 autocomplete="off" spellcheck="false" aria-label="Domain to trust" />
+          <button id="trustedAddBtn" class="btn primary small" type="button">Add</button>
+        </div>
+        <button id="useCurrentBtn" class="link-btn" type="button">Use current site</button>
+        <p id="trustedMsg" class="trusted-msg" role="status"></p>
+        <ul id="trustedList" class="trusted-list"></ul>
+      </div>
+    </details>
 
     <div class="actions">
       <button id="scanBtn" class="btn primary" type="button">Scan again</button>

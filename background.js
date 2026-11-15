@@ -2,6 +2,7 @@
  * PhishGuard Lite - background.js (service worker)
  * Scans every page when it finishes loading, shows a badge on the toolbar icon,
  * and shows a warning notification for high-risk pages.
+ * Pages on the user's trusted list are never flagged.
  * It never blocks a page: the score is only a heuristic, so the user decides.
  */
 "use strict";
@@ -79,7 +80,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status !== "complete" || !tab.url) return;
 
   try {
-    const result = PhishGuard.analyzeUrl(tab.url);
+    // scanUrl applies the user's trusted list; trusted sites come back as Low Risk.
+    const result = await PhishGuard.scanUrl(tab.url);
 
     if (!result.supported) {
       await setBadge(tabId, "low");
