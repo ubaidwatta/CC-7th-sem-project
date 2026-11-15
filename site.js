@@ -48,26 +48,65 @@ function note(id, text, kind) {
   node.className = "msg" + (kind ? " " + kind : "");
 }
 
-function show(view) {
-  for (const name of ["scan", "history", "trusted"]) $("v-" + name).hidden = name !== view;
-  document.querySelectorAll("#tabs button").forEach((b) => {
-    if (b.dataset.view === view) b.setAttribute("aria-current", "page");
-    else b.removeAttribute("aria-current");
-  });
-  if (view === "history") renderHistory();
-  if (view === "trusted") renderTrusted();
+/** Sets the position of a list row; site.css uses it to delay its entrance. */
+function stagger(node, index) {
+  node.style.setProperty("--i", String(Math.min(index, 10)));
+  return node;
+}
+
+/* ---------- Motion ---------- */
+const reducedMotion = () =>
+  Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+/** Redraws the gauge from empty so the fill animates on every scan. */
+function setGauge(score) {
+  const fill = $("gFill");
+  fill.style.strokeDasharray = String(CIRCUMFERENCE);
+  fill.style.transition = "none";
+  fill.style.strokeDashoffset = String(CIRCUMFERENCE);
+  fill.getBoundingClientRect(); // force a reflow so the next change animates
+  fill.style.transition = "";
+  fill.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - score / 100));
+}
+
+let countFrame = 0;
+
+/** Counts the score up from 0. Shows the final number at once if motion is reduced. */
+function countUp(node, target) {
+  cancelAnimationFrame(countFrame);
+  if (reducedMotion() || target === 0) {
+    node.textContent = String(target);
+    return;
+  }
+  const duration = 700;
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    node.textContent = String(Math.round(target * eased));
+    if (t < 1) countFrame = requestAnimationFrame(step);
+  };
+  node.textContent = "0";
+  countFrame = requestAnimationFrame(step);
 }
 
 /* ---------- Scan ---------- */
 function render(r) {
   current = r;
-  $("result").hidden = false;
+  $("idle").hidden = true;
+
+  // Restart the entrance animation on every scan, including a re-scan of the same site.
+  const result = $("result");
+  result.hidden = false;
+  result.classList.remove("enter");
+  void result.offsetWidth;
+  result.classList.add("enter");
+
   $("rDomain").textContent = r.domain + " · " + r.protocol.toUpperCase();
   $("rUrl").textContent = r.url;
   $("rStatus").dataset.level = r.level;
-  $("rScore").textContent = r.score;
-  $("gFill").style.strokeDasharray = CIRCUMFERENCE;
-  $("gFill").style.strokeDashoffset = CIRCUMFERENCE * (1 - r.score / 100);
+  countUp($("rScore"), r.score);
+  setGauge(r.score);
   $("rLabel").textContent = r.label;
   $("rMsg").textContent = MESSAGES[r.trusted ? "trusted" : r.level];
   $("trustBtn").textContent = r.trusted ? "Remove from trusted" : "Trust this site";
@@ -79,13 +118,14 @@ function render(r) {
   if (!r.indicators.length) {
     list.append(el("li", "empty", r.trusted ? "Skipped: site is trusted." : "No suspicious indicators."));
   }
-  for (const i of r.indicators) {
-    const li = el("li", "ind");
+  r.indicators.forEach((i, index) => {
+    const weight = i.points >= 25 ? "h" : i.points >= 12 ? "m" : "l";
+    const li = stagger(el("li", "ind " + weight), index);
     const top = el("div", "top");
-    top.append(el("span", "", i.title), el("span", "pts " + (i.points >= 25 ? "h" : i.points >= 12 ? "m" : "l"), "+" + i.points));
+    top.append(el("span", "", i.title), el("span", "pts " + weight, "+" + i.points));
     li.append(top, el("p", "", i.detail));
     list.append(li);
-  }
+  });
 
   const lines = [];
   if (r.indicators.length === 1) lines.push("Score: " + r.rawScore);
@@ -104,11 +144,13 @@ async function scan(text) {
   const result = await P.scanUrl(url);
   if (!result.supported) {
     $("result").hidden = true;
+    $("idle").hidden = false;
     return note("scanMsg", result.reason + " Enter a web address.", "err");
   }
   note("scanMsg", "");
   $("urlIn").value = url;
   try { await P.saveScan(result); } catch (e) { console.error("History not saved:", e); }
+  renderHistory();
   render(result);
 }
 
@@ -121,18 +163,18 @@ async function renderHistory() {
   $("clearBtn").hidden = history.length === 0;
   if (!history.length) return list.append(el("li", "empty", "No scans yet. Scan a URL to see it here."));
 
-  for (const e of history) {
+  history.forEach((e, index) => {
     const row = el("button", "item");
     row.type = "button";
     row.dataset.level = e.level;
     const left = el("span", "col");
     left.append(el("span", "name", e.domain), el("span", "url", new Date(e.scannedAt).toLocaleString()));
     row.append(left, el("span", "pill", e.score + "/100 · " + e.label));
-    row.addEventListener("click", () => { show("scan"); scan(e.url); });
-    const li = el("li");
+    row.addEventListener("click", () => scan(e.url));
+    const li = stagger(el("li"), index);
     li.append(row);
     list.append(li);
-  }
+  });
 }
 
 /* ---------- Trusted domains ---------- */
@@ -143,8 +185,8 @@ async function renderTrusted() {
   list.replaceChildren();
   if (!trusted.length) return list.append(el("li", "empty", "No trusted domains yet."));
 
-  for (const domain of trusted) {
-    const li = el("li", "item");
+  trusted.forEach((domain, index) => {
+    const li = stagger(el("li", "item"), index);
     const remove = el("button", "btn danger sm", "Remove");
     remove.type = "button";
     remove.setAttribute("aria-label", "Remove " + domain);
@@ -153,11 +195,12 @@ async function renderTrusted() {
         await P.removeTrustedDomain(domain);
         note("tMsg", "Removed " + domain + ".", "ok");
         renderTrusted();
+        if (current) scan(current.url);
       } catch (e) { note("tMsg", STORAGE_ERROR, "err"); }
     });
     li.append(el("span", "name", domain), remove);
     list.append(li);
-  }
+  });
 }
 
 async function addTrusted() {
@@ -167,6 +210,7 @@ async function addTrusted() {
     $("tIn").value = "";
     note("tMsg", "Added " + r.domain + ".", "ok");
     renderTrusted();
+    if (current) scan(current.url);
   } catch (e) { note("tMsg", STORAGE_ERROR, "err"); }
 }
 
@@ -174,7 +218,6 @@ async function addTrusted() {
 $("scanBtn").addEventListener("click", () => scan($("urlIn").value));
 $("urlIn").addEventListener("keydown", (e) => { if (e.key === "Enter") scan($("urlIn").value); });
 document.querySelectorAll("[data-ex]").forEach((b) => b.addEventListener("click", () => scan(b.dataset.ex)));
-document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => show(b.dataset.view)));
 $("clearBtn").addEventListener("click", async () => {
   if (!confirm("Delete all scan history?")) return;
   try { await P.clearHistory(); } catch (e) { console.error(e); }
@@ -192,8 +235,10 @@ $("trustBtn").addEventListener("click", async () => {
       if (!r.ok) return note("trustMsg", r.error, "err");
     }
     await scan(current.url);
+    renderTrusted();
   } catch (e) { note("trustMsg", STORAGE_ERROR, "err"); }
 });
 
-$("gFill").style.strokeDasharray = CIRCUMFERENCE;
-$("gFill").style.strokeDashoffset = CIRCUMFERENCE;
+setGauge(0);
+renderHistory();
+renderTrusted();
