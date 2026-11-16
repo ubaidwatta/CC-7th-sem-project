@@ -13,7 +13,7 @@
   --med: #a16207;
   --high: #b91c1c;
   --slab-low: #15803d;
-  --slab-med: #b45309;
+  --slab-med: #eab308;
   --slab-high: #b91c1c;
   --ink: #12202a;
   --lvl: var(--muted);
@@ -37,7 +37,6 @@
     --med: #fbbf24;
     --high: #f87171;
     --slab-low: #166534;
-    --slab-med: #92400e;
     --slab-high: #991b1b;
     --ink: #0a0f12;
   }
@@ -59,7 +58,7 @@ body {
 
 /* ---------- Header ---------- */
 
-.top { background: var(--ink); color: #f1f5f8; }
+.site-header { background: var(--ink); color: #f1f5f8; }
 .hbar { display: flex; align-items: center; gap: 12px; height: 64px; }
 .hbar svg { width: 30px; height: 30px; color: #67d4f0; flex: none; }
 h1 { font-size: 19px; font-weight: 700; letter-spacing: 0.2px; }
@@ -182,43 +181,43 @@ button.item:hover { background: color-mix(in srgb, var(--accent) 10%, var(--soft
 
 /* ---------- Result ---------- */
 
-[data-level="low"] { --lvl: var(--low); --slab: var(--slab-low); }
-[data-level="medium"] { --lvl: var(--med); --slab: var(--slab-med); }
-[data-level="high"] { --lvl: var(--high); --slab: var(--slab-high); }
+/* Risk level sets the verdict colour (--slab) and the text colour on it (--fg). */
+[data-level="low"] { --lvl: var(--low); --slab: var(--slab-low); --fg: #ffffff; }
+[data-level="medium"] { --lvl: var(--med); --slab: var(--slab-med); --fg: #1a1300; }
+[data-level="high"] { --lvl: var(--high); --slab: var(--slab-high); --fg: #ffffff; }
 
 .site .name { font-size: 18px; font-weight: 700; word-break: break-all; }
 .url { color: var(--muted); font-size: 13px; word-break: break-all; }
 
-/* The verdict is one solid block in the risk colour. */
+/* The verdict is one solid block: green (low), yellow (medium) or red (high). */
 .status {
-  --slab: var(--slab-low);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
   padding: 22px;
   border-radius: 8px;
-  background: var(--slab);
-  color: #fff;
-  transition: background 0.3s ease;
+  background: var(--slab, var(--slab-low));
+  color: var(--fg, #ffffff);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 .gauge { position: relative; width: 150px; height: 150px; margin-bottom: 4px; }
 .gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .gauge circle { fill: none; stroke-width: 9; }
-.g-bg { stroke: rgba(255, 255, 255, 0.28); }
-.g-fill { stroke: #fff; stroke-linecap: round; transition: stroke-dashoffset 0.8s var(--ease); }
+.g-bg { stroke: color-mix(in srgb, currentColor 28%, transparent); }
+.g-fill { stroke: currentColor; stroke-linecap: round; transition: stroke-dashoffset 0.8s var(--ease); }
 .gauge b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 50px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .lbl { font-size: 24px; font-weight: 700; line-height: 1.2; }
-.sub { font-size: 14px; color: rgba(255, 255, 255, 0.92); }
-.status .btn { margin-top: 6px; background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.75); }
-.status .btn:hover { background: rgba(255, 255, 255, 0.16); filter: none; }
-.status .msg { color: #fff; }
+.sub { font-size: 14px; color: inherit; opacity: 0.92; }
+.status .btn { margin-top: 6px; background: transparent; color: inherit; border-color: currentColor; }
+.status .btn:hover { background: color-mix(in srgb, currentColor 14%, transparent); filter: none; }
+.status .msg { color: inherit; }
 
 li.ind { background: var(--soft); border-radius: 6px; padding: 9px 12px; border-left: 3px solid var(--line); }
 li.ind.h { border-left-color: var(--high); }
 li.ind.m { border-left-color: var(--med); }
 li.ind.l { border-left-color: var(--muted); }
-.top-row, li.ind .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 14px; }
+li.ind .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 14px; }
 .pts { font-weight: 700; white-space: nowrap; padding: 0 8px; border-radius: 999px; background: color-mix(in srgb, currentColor 12%, transparent); }
 .pts.h { color: var(--high); }
 .pts.m { color: var(--med); }
